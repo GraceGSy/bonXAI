@@ -18,7 +18,7 @@ export const DataExplorer = ({data=[], dataTypes={}}) => {
 
 	function inArray(variable, originalArray, item) {
 
-		if (dataTypes[variable].type === "int64") {
+		if (dataTypes[variable].type != "string") {
 			if (originalArray.filter(a => a == item).length === 0) {
 				return false
 			} else {
@@ -81,7 +81,7 @@ export const DataExplorer = ({data=[], dataTypes={}}) => {
 				let varFilters = filters[filterVariable];
 				let dValue = d[filterVariable];
 
-				if (dataTypes[filterVariable].type === "int64") {
+				if (dataTypes[filterVariable].type != "string") {
 					if (varFilters.filter(a => a == dValue).length == 0) {
 						return false
 					}

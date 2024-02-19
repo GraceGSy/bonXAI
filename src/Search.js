@@ -7,7 +7,7 @@ import TextField from '@mui/material/TextField';
 
 import SearchIcon from '@mui/icons-material/Search';
 
-export const Search = ({setSearchStr}) => {
+export const Search = ({title="Search", width="350px", setSearchStr}) => {
   return (
     <Box
       component="form"
@@ -20,16 +20,16 @@ export const Search = ({setSearchStr}) => {
     >
       <TextField 
         InputProps={{
-            startAdornment: <InputAdornment position="start"><IconButton><SearchIcon /></IconButton></InputAdornment>,
+            startAdornment: <InputAdornment position="start"></InputAdornment>,
         }}
         size="small"
         id="outlined-basic"
-        label="Search"
+        label={title}
         variant="outlined"
-        onChange={(event, newValue) => {
+        onChange={(event) => {
           setSearchStr(event.target.value);
         }}
-        style={{"width":"350px"}} />
+        style={{"width":width}} />
     </Box>
   );
 }

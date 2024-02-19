@@ -133,7 +133,7 @@ export const DataTable = ({data=[], filteredData=[], dataTypes={}, variables=[],
 
   return (
     <Box>
-      <Paper sx={{ mb: 2 }}>
+      <Paper sx={{ mb: 2, "width":"1000px" }}>
         <TableContainer>
           <Table
             aria-labelledby="tableTitle"
