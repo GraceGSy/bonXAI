@@ -6,17 +6,15 @@ import Button from '@mui/material/Button';
 import { SelectedTable } from "./SelectedTable.js";
 import { Search } from "./Search.js";
 
-export const UMAPVis = ({dataTypes={},
-						trainData=[],
-						trainDataEmbeddings=[],
-						testData=[],
-						testDataEmbeddings=[],
+export const UMAPVis = ({allTrainData=[],
+						allTestData=[],
 						layout={"height": 500,
 						 		"width": 650,
 						 		"marginRight": 25,
 						 		"marginLeft": 25,
 						 		"marginTop": 25,
-						 		"marginBottom": 25}}) => {
+						 		"marginBottom": 25},
+						 _queryInput}) => {
   
 	const ref = useRef("svgUMAP");
 
@@ -29,29 +27,29 @@ export const UMAPVis = ({dataTypes={},
 		let svg = d3.select(ref.current);
 		let svgElement = svg.select("#vis");
 
-		let xMin = d3.min(trainDataEmbeddings.concat(testDataEmbeddings), d => d["0"]);
-		let xMax = d3.max(trainDataEmbeddings.concat(testDataEmbeddings), d => d["0"]);
+		let xExtent = d3.extent(allTrainData.concat(allTestData), d => d["0"]);
 
-		let yMin = d3.min(trainDataEmbeddings.concat(testDataEmbeddings), d => d["1"]);
-		let yMax = d3.max(trainDataEmbeddings.concat(testDataEmbeddings), d => d["1"]);
+		let yExtent = d3.extent(allTrainData.concat(allTestData), d => d["1"]);
 
 		// Declare the x (horizontal position) scale.
 		const x = d3.scaleLinear()
-		  .domain([xMin, xMax])
+		  .domain(xExtent)
 		  .range([layout.marginLeft, layout.width - layout.marginRight]);
 
 		// Declare the y (vertical position) scale.
 		const y = d3.scaleLinear()
-		  .domain([yMin, yMax])
+		  .domain(yExtent)
 		  .range([layout.height - layout.marginBottom, layout.marginTop]);
 
+		let uniqueLabels = Array.from(new Set(allTrainData.map(d => d.label)));
+
 		const colorScale = d3.scaleOrdinal(d3.schemeSet2)
-			.domain(dataTypes["label"].names)
+			.domain(uniqueLabels)
 
 		// Add a rect for each bin.
 		let trainDataPoint = svgElement.select("#train")
 			.selectAll(".trainEmbeddings")
-			.data(trainDataEmbeddings)
+			.data(allTrainData)
 			.join("circle")
 			.attr("class", "trainEmbeddings")
 			.attr("cx", (d) => x(d["0"]))
@@ -59,13 +57,13 @@ export const UMAPVis = ({dataTypes={},
 			.attr("r", 3)
 			.attr("fill", "none")
 			.attr("stroke", (d, i) => {
-				return colorScale(dataTypes["label"]["int2str"][trainData[i]["label"]])})
+				return colorScale(d.label)})
 			.attr("opacity", 0.25);
 
 		// Add a rect for each bin.
-		let testData = svgElement.select("#test")
+		let testDataPoint = svgElement.select("#test")
 			.selectAll(".testEmbeddings")
-			.data(testDataEmbeddings)
+			.data(allTestData)
 			.join("circle")
 			.attr("class", "testEmbeddings")
 			.attr("cx", (d) => x(d["0"]))
@@ -85,14 +83,14 @@ export const UMAPVis = ({dataTypes={},
 			  trainDataPoint
 			    .attr("fill", (d, i) => {
 			    	if (x0 <= x(d["0"]) && x(d["0"]) < x1 && y0 <= y(d["1"]) && y(d["1"]) < y1) {
-			    		return colorScale(dataTypes["label"]["int2str"][trainData[i]["label"]])
+			    		return colorScale(d.label)
 			    	} else {
 			    		return "none"
 			    	}
 			    })
 			    .attr("stroke", (d, i) => {
 			    	if (x0 <= x(d["0"]) && x(d["0"]) < x1 && y0 <= y(d["1"]) && y(d["1"]) < y1) {
-			    		return colorScale(dataTypes["label"]["int2str"][trainData[i]["label"]])
+			    		return colorScale(d.label)
 			    	} else {
 			    		return "gray"
 			    	}
@@ -105,13 +103,13 @@ export const UMAPVis = ({dataTypes={},
 			    	}
 			    });
 
-			  value = trainData.filter((d, i) => (x0 <= x(trainDataEmbeddings[i]["0"]) && x(trainDataEmbeddings[i]["0"]) < x1
-			  									&& y0 <= y(trainDataEmbeddings[i]["1"]) && y(trainDataEmbeddings[i]["1"]) < y1));
+			  value = allTrainData.filter((d, i) => (x0 <= x(d["0"]) && x(d["0"]) < x1
+			  									&& y0 <= y(d["1"]) && y(d["1"]) < y1));
 			  setBrushed(value);
 			} else {
 			  trainDataPoint
 			  	.attr("stroke", (d, i) => {
-					return colorScale(dataTypes["label"]["int2str"][trainData[i]["label"]])})
+					return colorScale(d.label)})
 			  	.attr("fill", "none")
 			  	.attr("opacity", 0.25);
 			}
@@ -120,15 +118,21 @@ export const UMAPVis = ({dataTypes={},
 	    // Create the brush behavior.
 		svg.call(brush);
 
-	}, [trainData, trainDataEmbeddings, testDataEmbeddings, dataTypes])
-
-	// useEffect(() => {
-	// 	// console.log(queries.concat([searchStr]))
-	// 	// setQueries(queries.concat([searchStr]));
-	// }, [searchStr])
+	}, [allTrainData, allTestData])
 
 	function runQuery(query) {
-		console.log("querying...", query);
+		if (query) {
+
+	    	let hidden = document.getElementById(_queryInput);
+	    	let data_string = JSON.stringify([query]);
+
+	    	if (hidden) {
+		        hidden.value = data_string;
+		        var event = document.createEvent('HTMLEvents');
+		        event.initEvent('input', false, true);
+		        hidden.dispatchEvent(event);
+	    	}
+	    }
 	}
 
   return (
@@ -151,7 +155,7 @@ export const UMAPVis = ({dataTypes={},
 	          runQuery(searchStr);
 	        }}>Compute</Button>
       </div>
-      <SelectedTable selectedData={testData} hover={hover} />
+      <SelectedTable selectedData={allTestData} hover={hover} />
       <SelectedTable title="Compare" selectedData={brushed} />
     </div>
   )

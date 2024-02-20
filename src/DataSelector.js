@@ -3,7 +3,7 @@ import React, {useRef, useState, useEffect} from "react";
 import { DataTable } from "./DataTable.js";
 import { Search } from "./Search.js";
 
-export const DataExplorer = ({data=[], dataTypes={}}) => {
+export const DataSelector = ({data=[], dataTypes={}, _selectedData}) => {
 
 	const [variables, setVariables] = useState([]);
 
@@ -105,6 +105,23 @@ export const DataExplorer = ({data=[], dataTypes={}}) => {
 		setFilteredData(newFilteredData);
 
 	}, [filters, searchStr, dataTypes])
+
+	useEffect(() => {
+
+		if (filteredData) {
+
+	    	let hidden = document.getElementById(_selectedData);
+	    	let data_string = JSON.stringify(filteredData);
+
+	    	if (hidden) {
+		        hidden.value = data_string;
+		        var event = document.createEvent('HTMLEvents');
+		        event.initEvent('input', false, true);
+		        hidden.dispatchEvent(event);
+	    	}
+	    }
+
+	}, [filteredData])
 
 	return (
 	    <div>

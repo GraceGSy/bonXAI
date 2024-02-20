@@ -11,19 +11,15 @@ testData - ["text1", "text2", ...]
 testDataEmbeddings - [{"0":x, "1":y}, ...]
 testDataPrediction - [{'label':, 'score':}, ...]
 */
-export const InferenceExplorer = ({dataTypes={},
-								   trainData=[],
-								   trainDataEmbeddings=[],
-								   testData=[],
-								   testDataEmbeddings=[],
-								   testDataPrediction=[]}) => {
+export const InferenceExplorer = ({allTrainData=[],
+								   allTestData=[],
+								   _queryInput}) => {
+
+	console.log(allTestData);
 
 	return (
 	    <div>
-	    	<UMAPVis dataTypes={dataTypes}
-	    			trainData={trainData}
-	    			trainDataEmbeddings={trainDataEmbeddings}
-	    			testDataEmbeddings={testDataEmbeddings} />
+	    	<UMAPVis allTrainData={allTrainData} allTestData={allTestData} _queryInput={_queryInput} />
 	    </div>
   )
 }

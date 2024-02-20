@@ -20,13 +20,16 @@ export const InferenceExplorerDemo = () => {
 							'str2int': {'anger': 0, 'joy': 1, 'optimism': 2, 'sadness': 3}}
 						}
 
-	// useEffect(() => {
+	const allTrainData = trainData.map((d, i) => {
+		d["0"] = trainDataEmbeddings[i]["0"];
+		d["1"] = trainDataEmbeddings[i]["1"];
 
-	// }, [trainData, trainDataEmbeddings])
+		return d;
+	})
 
 	return (
 		<div>
-			<InferenceExplorer dataTypes={dataTypes} trainData={trainData} trainDataEmbeddings={trainDataEmbeddings} />
+			<InferenceExplorer dataTypes={dataTypes} allTrainData={allTrainData} />
 		</div>
 	)
 }

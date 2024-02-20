@@ -2,3 +2,11 @@
 /dist
 /node_modules
 npm-debug.log*
+
+/es
+/lib
+
+/bonxai/js/node_modules
+/bonxai/js/dist
+
+notebooks/my_awesome_model/

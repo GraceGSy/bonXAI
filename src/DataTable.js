@@ -17,7 +17,7 @@ import { visuallyHidden } from '@mui/utils';
 
 import { HistogramVis } from "./HistogramVis.js";
 
-function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
+function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
     return -1;
   }
@@ -27,15 +27,7 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   return 0;
 }
 
-type Order = 'asc' | 'desc';
-
-function getComparator<Key extends keyof any>(
-  order: Order,
-  orderBy: Key,
-): (
-  a: { [key in Key]: number | string },
-  b: { [key in Key]: number | string },
-) => number {
+function getComparator(order, orderBy) {
   return order === 'desc'
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy);
@@ -45,16 +37,15 @@ function getComparator<Key extends keyof any>(
 // stableSort() brings sort stability to non-modern browsers (notably IE11). If you
 // only support modern browsers you can replace stableSort(exampleArray, exampleComparator)
 // with exampleArray.slice().sort(exampleComparator)
-function stableSort<T>(array: readonly T[], comparator: (a: T, b: T) => number) {
-  const stabilizedThis = array.map((el, index) => [el, index] as [T, number]);
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
+function stableSort(array, comparator) {
+  array.sort((a, b) => {
+    const order = comparator(a, b);
     if (order !== 0) {
       return order;
     }
-    return a[1] - b[1];
+    return a - b;
   });
-  return stabilizedThis.map((el) => el[0]);
+  return array.map((el) => el);
 }
 
 function EnhancedTableHead({variables=[], data=[], dataTypes={}, currentFilters, handleFilter, onRequestSort, order, orderBy, rowCount}) {
@@ -94,8 +85,8 @@ function EnhancedTableHead({variables=[], data=[], dataTypes={}, currentFilters,
 
 export const DataTable = ({data=[], filteredData=[], dataTypes={}, variables=[], currentFilters, handleFilter}) => {
 
-  const [order, setOrder] = React.useState<Order>('asc');
-  const [orderBy, setOrderBy] = React.useState<keyof Data>('calories');
+  const [order, setOrder] = React.useState("asc");
+  const [orderBy, setOrderBy] = React.useState("text");
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
@@ -105,11 +96,11 @@ export const DataTable = ({data=[], filteredData=[], dataTypes={}, variables=[],
     setOrderBy(property);
   }
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -152,15 +143,14 @@ export const DataTable = ({data=[], filteredData=[], dataTypes={}, variables=[],
             <TableBody>
               {visibleRows.map((row, index) => {
                 const labelId = `enhanced-table-checkbox-${index}`;
-
                 return (
                   <TableRow
                     hover
                     role="checkbox"
                     tabIndex={-1}
-                    key={row.id}
+                    key={`${index}`}
                     sx={{ cursor: 'pointer' }}>
-                    {variables.map((v, i) => <TableCell>{row[v]}</TableCell>)}
+                    {variables.map((v, i) => <TableCell key={`row${index}cell${i}`}>{row[v]}</TableCell>)}
                   </TableRow>
                 );
               })}

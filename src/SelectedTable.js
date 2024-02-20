@@ -33,7 +33,7 @@ export const SelectedTable = ({title="Queries",
                 <TableCell component="th" scope="row">
                   {row.text}
                 </TableCell>
-                <TableCell align="right">{row.label}</TableCell>
+                <TableCell>{row.label}</TableCell>
               </TableRow>
             ))}
           </TableBody>

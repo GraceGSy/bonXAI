@@ -13,7 +13,7 @@ export const Search = ({title="Search", width="350px", setSearchStr}) => {
       component="form"
       sx={{
         '& > :not(style)': { m: 1, width: '25ch' },
-        "& .MuiOutlinedInput-root": {"& fieldset":{"border-radius": "25px"}}
+        "& .MuiOutlinedInput-root": {"& fieldset":{"borderRadius": "25px"}}
       }}
       noValidate
       autoComplete="off"
