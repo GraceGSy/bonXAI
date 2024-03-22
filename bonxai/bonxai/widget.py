@@ -4,6 +4,7 @@ from datasets import Dataset
 from sentence_transformers import SentenceTransformer
 from transformers import pipeline
 import umap
+import torch
 
 import ipywidgets as widgets
 from traitlets import Unicode, Dict, List, TraitError
@@ -123,24 +124,55 @@ class DataSelector(DataSelectorBaseWidget):
             df_dict[k] = list(df_dict[k].values())
         return Dataset.from_dict(df_dict)
 
-# @widgets.register
-# class DataExplorer(DataExplorerBaseWidget):
-#     def __init__(self, data=[], **kwargs):
-        
-#         self.dataTrain = _get_data(data)
-#         self.dataTypes = _data_type(data)
+# def getEmbeddings(texts, model, tokenizer, device):
 
-#         # print("here", self.data)
-        
-#         super().__init__(
-#             data=self.dataTrain,
-#             dataTypes=self.dataTypes,
-#             **kwargs
-#         )
+#     # print(model, tokenizer, device)
 
-# Should only run once
-def getEmbeddings(sentences, model):
-    return model.encode(sentences)
+#     vector_array = []
+
+#     for text in texts:
+#         a1 = text
+#         b1 = tokenizer.encode(a1)
+
+#         # print(b1)
+
+#         input_ids = torch.tensor(b1).unsqueeze(0).to(device)  # Batch size 1
+
+#         # print(input_ids)
+
+#         outputs = model(input_ids , output_hidden_states = True)
+
+#         hidden_states = [i for i in range(1,len(outputs.hidden_states))]
+
+#         last_hidden_states = outputs.hidden_states[-1]
+#         if len(last_hidden_states.shape)>1:
+#             last_hidden_states = torch.mean(last_hidden_states, 1)
+#         last_hidden_states = last_hidden_states[0].flatten()
+#         vectors = last_hidden_states.cpu().detach().numpy()
+#         vector_array.append(vectors)
+
+#     return vector_array
+
+def getEmbeddings(texts, model, tokenizer, device, batch_size=32):
+    vector_array = []
+
+    for i in range(0, len(texts), batch_size):
+        batch_texts = texts[i:i+batch_size]
+        encoded_batch = [tokenizer.encode(text, add_special_tokens=True) for text in batch_texts]
+        max_len = max(len(encoded_text) for encoded_text in encoded_batch)
+        padded_batch = [encoded_text + [tokenizer.pad_token_id] * (max_len - len(encoded_text)) for encoded_text in encoded_batch]
+
+        input_ids = torch.tensor(padded_batch).to(device)
+
+        with torch.no_grad():
+            outputs = model(input_ids, output_hidden_states=True)
+
+        last_hidden_states = outputs.hidden_states[-1]
+        mean_hidden_states = torch.mean(last_hidden_states, dim=1)
+        vectors = mean_hidden_states.cpu().detach().numpy()
+        vector_array.extend(vectors)
+
+    return vector_array
 
 # Train-dataset UMAP reducer
 # Should only run once
@@ -153,8 +185,8 @@ def getReducedEmbeddings(reducer):
   return reducer.embedding_[:]
 
 # New data UMAP embeddings, newData is list
-def getNewReducedEmbeddings(newData, reducer, model):
-  new_sentence_embedding = model.encode(newData)
+def getNewReducedEmbeddings(newData, model, tokenizer, device, reducer):
+  new_sentence_embedding = getEmbeddings(newData, model, tokenizer, device)
   new_reduced = reducer.transform(new_sentence_embedding)
   return new_reduced
 
@@ -184,7 +216,7 @@ class InferenceExplorer(InferenceExplorerBaseWidget):
 
     query = List().tag(sync=True)
 
-    def __init__(self, data, model, label2id, **kwargs):
+    def __init__(self, data, model, tokenizer, device, label2id, **kwargs):
 
         self.label2id = label2id
 
@@ -192,13 +224,16 @@ class InferenceExplorer(InferenceExplorerBaseWidget):
         self.observe(handler=self.__run_inference, names="query")
 
         # Should only load once, for computing sentence embeddings
-        self.transformer_model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+        # self.transformer_model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
         # Path to predictive model
         self.model = model
 
+        self.tokenizer = tokenizer
+        self.device = device
+
         # Get umap coords for reduced data
-        self.umapReducer = getReducer(getEmbeddings([d["text"] for d in data], self.transformer_model))
+        self.umapReducer = getReducer(getEmbeddings([d["text"] for d in data], model, tokenizer, device))
         self.umapCoords = getReducedEmbeddings(self.umapReducer)
 
         self.allTrainData = _get_data(data)
@@ -217,8 +252,8 @@ class InferenceExplorer(InferenceExplorerBaseWidget):
 
     def __run_inference(self, change):
 
-        newQueryPrediction = pipeline("sentiment-analysis", model=self.model)(change["new"][0])
-        newQueryUmapCoords = getNewReducedEmbeddings(change["new"], self.umapReducer, self.transformer_model)
+        newQueryPrediction = pipeline("sentiment-analysis", model=self.model, tokenizer=self.tokenizer, device=self.device)(change["new"][0])
+        newQueryUmapCoords = getNewReducedEmbeddings(change["new"], self.model, self.tokenizer, self.device, self.umapReducer)
 
         print(newQueryPrediction, newQueryUmapCoords)
 

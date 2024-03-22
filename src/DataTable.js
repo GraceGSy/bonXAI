@@ -111,7 +111,7 @@ export const DataTable = ({data=[], filteredData=[], dataTypes={}, variables=[],
 
   const visibleRows = React.useMemo(
     () =>
-      stableSort(filteredData.length == 0 ? data : filteredData, getComparator(order, orderBy)).slice(
+      stableSort(filteredData, getComparator(order, orderBy)).slice(
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage,
       ),
@@ -169,7 +169,7 @@ export const DataTable = ({data=[], filteredData=[], dataTypes={}, variables=[],
         <TablePagination
           rowsPerPageOptions={[10, 20, 30]}
           component="div"
-          count={filteredData.length == 0 ? data.length : filteredData.length}
+          count={filteredData.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

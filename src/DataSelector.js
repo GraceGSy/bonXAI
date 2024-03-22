@@ -78,7 +78,7 @@ export const DataSelector = ({data=[], dataTypes={}, _selectedData}) => {
 
 		})
 
-		newFilteredData = newFilteredData.filter(d => {
+		let allFilteredData = newFilteredData.filter((d, i) => {
 
 			for (let filterVariable of Object.keys(filters)) {
 
@@ -89,11 +89,12 @@ export const DataSelector = ({data=[], dataTypes={}, _selectedData}) => {
 					if (varFilters.filter(a => a == dValue).length == 0) {
 						return false
 					}
-				} else {
+				}
+
+				if (dataTypes[filterVariable].type == "string") {
 					if (varFilters.filter(a => a[0] <= dValue.length && a[1] >= dValue.length).length == 0) {
 						return false
 					}
-
 				}
 
 			}
@@ -102,7 +103,7 @@ export const DataSelector = ({data=[], dataTypes={}, _selectedData}) => {
 
 		})
 
-		setFilteredData(newFilteredData);
+		setFilteredData(allFilteredData);
 
 	}, [filters, searchStr, dataTypes])
 

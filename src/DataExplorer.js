@@ -8,7 +8,7 @@ export const DataExplorer = ({data=[], dataTypes={}}) => {
 	const [variables, setVariables] = useState([]);
 
 	const [filters, setFilters] = useState({});
-	const [filteredData, setFilteredData] = useState([]);
+	const [filteredData, setFilteredData] = useState(data);
 	const [searchStr, setSearchStr] = useState("");
 
 	useEffect(() => {
@@ -78,7 +78,7 @@ export const DataExplorer = ({data=[], dataTypes={}}) => {
 
 		})
 
-		newFilteredData = newFilteredData.filter(d => {
+		let allFilteredData = newFilteredData.filter((d, i) => {
 
 			for (let filterVariable of Object.keys(filters)) {
 
@@ -89,11 +89,12 @@ export const DataExplorer = ({data=[], dataTypes={}}) => {
 					if (varFilters.filter(a => a == dValue).length == 0) {
 						return false
 					}
-				} else {
+				}
+
+				if (dataTypes[filterVariable].type == "string") {
 					if (varFilters.filter(a => a[0] <= dValue.length && a[1] >= dValue.length).length == 0) {
 						return false
 					}
-
 				}
 
 			}
@@ -102,7 +103,7 @@ export const DataExplorer = ({data=[], dataTypes={}}) => {
 
 		})
 
-		setFilteredData(newFilteredData);
+		setFilteredData(allFilteredData);
 
 	}, [filters, searchStr, dataTypes])
 
